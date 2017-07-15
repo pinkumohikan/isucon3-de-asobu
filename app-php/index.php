@@ -9,14 +9,16 @@ function configure()
 {
     option('base_uri', '');
     option('session', 'isucon_session');
- 
-    $env = getenv('ISUCON_ENV');
-    if (!$env) $env = 'local';
 
-    $file = realpath(__DIR__ . '/../config/' . $env . '.json');
-    $fh = fopen($file, 'r');
-    $config = json_decode(fread($fh, filesize($file)), true);
-    fclose($fh);
+    $config = [
+        'database' => [
+            'dbname' => 'isucon',
+            'host' => 'localhost',
+            'port' => 3306,
+            'username' => 'isucon',
+            'password' => ''
+        ]
+    ];
 
     $db = null;
     try {
