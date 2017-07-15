@@ -1,7 +1,7 @@
 <?php
 
-ini_set( 'session.save_handler', 'memcached' );
-ini_set( 'session.save_path', 'localhost:11211' );
+ini_set( 'session.save_handler', 'files' );
+ini_set( 'session.save_path', '/tmp/' );
 
 require_once 'limonade/lib/limonade.php';
 
@@ -237,7 +237,7 @@ dispatch_post('/memo', function() {
 
     $user = get('user');
     $content = $_POST["content"];
-    $is_private = $_POST["is_private"] != 0 ? 1 : 0;
+    $is_private = isset($_POST["is_private"]) && $_POST["is_private"] != 0;
 
     $stmt = $db->prepare('INSERT INTO memos (user, content, is_private, created_at) VALUES (:user, :content, :is_private, now())');
     $stmt->bindValue(':user', $user['id']);
