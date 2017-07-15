@@ -200,9 +200,7 @@ dispatch_post('/signin', function() {
         session_regenerate_id(TRUE);
         $_SESSION['user'] = $user;
         $_SESSION['token'] = hash('sha256', rand(), FALSE);
-
         return redirect('/mypage');
-
     } else {
         return render('signin.html.php');
     }
