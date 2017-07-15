@@ -184,7 +184,6 @@ dispatch_get('/signin', function() {
 });
 
 dispatch_post('/signout', function() {
-    session_start();
     session_regenerate_id(TRUE);
     unset($_SESSION['user_id']);
     unset($_SESSION['token']);
