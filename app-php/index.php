@@ -62,9 +62,10 @@ function before($route) {
 
     filter_session($route);
 
-    if ($path != '/signin' || $method != 'POST') {
-        // call except "POST /signin"
-        filter_get_user($route);
+    $user = $_SESSION['user'] ?? null;
+    set('user', $user);
+    if ($user) {
+        header('Cache-Control: private');
     }
 
     if ($path == '/signout' || $path == '/mypage' || $path == '/memo') {
@@ -81,14 +82,6 @@ function filter_session($route) {
     set('session', $_SESSION);
 }
 
-function filter_get_user($route) {
-    $user = $_SESSION['user'] ?? [];
-    set('user', $user);
-    if ($user) {
-        header('Cache-Control: private');
-    }
-}
-
 function filter_require_user($route) {
     if (!get('user')) {
         return redirect('/');
@@ -96,8 +89,8 @@ function filter_require_user($route) {
 }
 
 function filter_anti_csrf($route) {
-    $sid = $_POST["sid"];
-    $token = $_SESSION["token"];
+    $sid = $_POST["sid"] ?? null;
+    $token = $_SESSION["token"] ?? null;
 
     if ($sid != $token) {
         return halt(400);
@@ -159,10 +152,15 @@ dispatch_get('/signin', function() {
 });
 
 dispatch_post('/signout', function() {
-    session_regenerate_id(TRUE);
-    unset($_SESSION['user']);
-    unset($_SESSION['token']);
-    
+    $_SESSION = [];
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000,
+        $params["path"], $params["domain"],
+        $params["secure"], $params["httponly"]
+    );
+    session_destroy();
+    session_start();
+
     return redirect('/');
 });
 
@@ -181,7 +179,7 @@ dispatch_post('/signin', function() {
     }
 
     if ($user['password'] == hash('sha256', $user['salt'] . $password, FALSE)) {
-        session_regenerate_id(TRUE);
+        #session_regenerate_id(true);
         $_SESSION['user'] = $user;
         $_SESSION['token'] = hash('sha256', rand(), FALSE);
         return redirect('/mypage');
@@ -249,7 +247,7 @@ dispatch_get('/memo/:id', function() {
         $cond = "AND is_private=0";
     }
 
-    $stmt = $db->prepare("SELECT * FROM memos WHERE user = :user " . $cond . " ORDER BY created_at");
+    $stmt = $db->prepare("SELECT id FROM memos WHERE user = :user " . $cond . " ORDER BY created_at");
     $stmt->bindValue(':user', $memo['user']);
     $stmt->execute();
     $memos = $stmt->fetchAll(PDO::FETCH_ASSOC);

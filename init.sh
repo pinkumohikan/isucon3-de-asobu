@@ -9,4 +9,8 @@ echo 'update memos as m, users as u set m.username = u.username where m.user = u
 
 echo 'alter table memos add index is_private_and_created_at(`is_private`, `created_at`);' | mysql -u isucon isucon
 
+sudo service nginx stop
+sudo rm -f /var/log/nginx/{access.log,error.log}
+sudo service nginx start
+
 echo 'initialized!' >> /home/isucon/bench-kun.log
