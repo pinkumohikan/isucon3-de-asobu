@@ -143,24 +143,15 @@ dispatch_get('/', function() {
 dispatch_get('/recent/:page', function(){
     $db = option('db_conn');
 
-    $page = params('page');
     $stmt = $db->prepare('SELECT count(*) AS total FROM memos WHERE is_private=0');
     $stmt->execute();
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     $total = $result["total"];
 
-    $stmt = $db->prepare("SELECT * FROM memos WHERE is_private=0 ORDER BY created_at DESC, id DESC LIMIT 100 OFFSET " . $page * 100);
+    $page = params('page');
+    $stmt = $db->prepare("SELECT id,username,content,created_at FROM memos WHERE is_private=0 ORDER BY created_at DESC, id DESC LIMIT 100 OFFSET " . $page * 100);
     $stmt->execute();
     $memos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach($memos as &$memo) {
-        $stmt = $db->prepare('SELECT username FROM users WHERE id = :id');
-        $stmt->bindValue(':id', $memo["user"]);
-        $stmt->execute();
-
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $memo["username"] = $result["username"];
-    }
 
     set('memos', $memos);
     set('page', $page);
@@ -241,7 +232,7 @@ dispatch_get('/memo/:id', function() {
     $db = option('db_conn');
 
     $user = get('user');
-    $stmt = $db->prepare('SELECT id, user, content, is_private, created_at, updated_at FROM memos WHERE id = :id');
+    $stmt = $db->prepare('SELECT id, user, username, content, is_private, created_at, updated_at FROM memos WHERE id = :id');
     $stmt->bindValue(':id', params('id'));
     $stmt->execute();
     $memo = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -258,12 +249,6 @@ dispatch_get('/memo/:id', function() {
     }
 
     $memo['content_html'] = markdown($memo['content']);
-
-    $stmt = $db->prepare('SELECT username FROM users WHERE id = :id');
-    $stmt->bindValue(':id', $memo['user']);
-    $stmt->execute();
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $memo['username'] = $row['username'];
 
     if ($user && $user['id'] == $memo['user']) {
         $cond = "";
