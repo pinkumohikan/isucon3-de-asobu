@@ -82,15 +82,8 @@ function filter_session($route) {
 function filter_get_user($route) {
     $db = option('db_conn');
 
-    $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
-
-    $stmt = $db->prepare('SELECT * FROM users WHERE id = :id');
-    $stmt->bindValue(':id', $user_id);
-    $stmt->execute();
-
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user = $_SESSION['user'];
     set('user', $user);
-
     if ($user) {
         header('Cache-Control: private');
     }
@@ -185,7 +178,7 @@ dispatch_get('/signin', function() {
 
 dispatch_post('/signout', function() {
     session_regenerate_id(TRUE);
-    unset($_SESSION['user_id']);
+    unset($_SESSION['user']);
     unset($_SESSION['token']);
     
     return redirect('/');
@@ -207,7 +200,7 @@ dispatch_post('/signin', function() {
 
     if ($user['password'] == hash('sha256', $user['salt'] . $password, FALSE)) {
         session_regenerate_id(TRUE);
-        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user'] = $user;
         $_SESSION['token'] = hash('sha256', rand(), FALSE);
 
         return redirect('/mypage');
