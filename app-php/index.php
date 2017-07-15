@@ -116,7 +116,7 @@ function markdown($content) {
     $metadata = stream_get_meta_data($fh);
     $filename = $metadata['uri'];
     fwrite($fh, $content);
-    $html = shell_exec("../bin/markdown " . $filename);
+    $html = shell_exec("/home/isucon/webapp/bin/markdown " . $filename);
     fclose($fh);
     return $html;
 }
