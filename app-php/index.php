@@ -80,9 +80,7 @@ function filter_session($route) {
 }
 
 function filter_get_user($route) {
-    $db = option('db_conn');
-
-    $user = $_SESSION['user'];
+    $user = $_SESSION['user'] ?? [];
     set('user', $user);
     if ($user) {
         header('Cache-Control: private');
