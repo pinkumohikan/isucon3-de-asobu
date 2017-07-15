@@ -201,8 +201,11 @@ dispatch_post('/signin', function() {
     $stmt->bindValue(':username', $username);
     $stmt->execute();
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$user) {
+        return render('signin.html.php');
+    }
 
-    if ($user && $user['password'] == hash('sha256', $user['salt'] . $password, FALSE)) {
+    if ($user['password'] == hash('sha256', $user['salt'] . $password, FALSE)) {
         session_regenerate_id(TRUE);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['token'] = hash('sha256', rand(), FALSE);
@@ -256,30 +259,29 @@ dispatch_get('/memo/:id', function() {
     $stmt->bindValue(':id', params('id'));
     $stmt->execute();
     $memo = $stmt->fetch(PDO::FETCH_ASSOC);
-
     if (!$memo) {
         return halt(404);
     }
-
     if ($memo['is_private'] != 0) {
-        if (!$user || $user['id'] != $memo['user']) {
+        if (!$user) {
+            return halt(404);
+        }
+        if ($user['id'] != $memo['user']) {
             return halt(404);
         }
     }
 
     $memo['content_html'] = markdown($memo['content']);
-    
+
     $stmt = $db->prepare('SELECT username FROM users WHERE id = :id');
     $stmt->bindValue(':id', $memo['user']);
     $stmt->execute();
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $memo['username'] = $row['username'];
 
-    
     if ($user && $user['id'] == $memo['user']) {
         $cond = "";
-    }
-    else {
+    } else {
         $cond = "AND is_private=0";
     }
 
@@ -298,8 +300,6 @@ dispatch_get('/memo/:id', function() {
             if ($i < count($memos) - 1) {
                 $newer = $memos[$i + 1];
             }
-
-
         }
     }   
 
@@ -310,9 +310,4 @@ dispatch_get('/memo/:id', function() {
     return html('memo.html.php');
 });
 
-
 run();
-
-
-
-?>
