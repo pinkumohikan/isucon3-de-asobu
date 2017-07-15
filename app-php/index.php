@@ -209,9 +209,6 @@ dispatch_post('/signin', function() {
         session_regenerate_id(TRUE);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['token'] = hash('sha256', rand(), FALSE);
-        $stmt = $db->prepare('UPDATE users SET last_access=now() WHERE id = :id');
-        $stmt->bindValue(':id', $user['id']);
-        $stmt->execute();
 
         return redirect('/mypage');
 
